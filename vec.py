@@ -28,7 +28,7 @@ class WordRecommander(object):
     def __init__(self):
         print("Loading word2vec bin...")
         self.wm = gensim.models.KeyedVectors.load_word2vec_format("wm.bin", binary=True)
-        print("Finished.")
+        print("Loading word2vec finished.")
         self.t2v = Convert2Vec(self.wm)
         self.cuttor = FilterCut()
         self.vec_data = []
@@ -38,19 +38,19 @@ class WordRecommander(object):
         with open('Techword.txt', 'r') as f:
             n = 0
             for line in f.readlines():
-                vec = recmder.get_word_vec(line.strip())
+                vec = self.get_word_vec(line.strip())
                 self.vec_data.append(vec)
                 self.vec_label.append(line.strip())
                 self.vec_label_int.append(n)
                 n += 1
 
-    def build_hnsw(self, vec_data, vec_label_int):
+    def build_hnsw(self):
         print("Initing index...")
         self.p = hnswlib.Index(space='l2', dim=200)
         self.p.init_index(max_elements=1100000, ef_construction=400, M=32)
         self.p.set_ef(200)
         print("Building index...")
-        self.p.add_items(vec_data, vec_label_int)
+        self.p.add_items(self.vec_data, self.vec_label_int)
         print("Saving index to 'tech_word.ind'...")
         self.p.save_index("tech_word.ind")
 
@@ -65,19 +65,26 @@ class WordRecommander(object):
         neighbors = []
         for l in labels:
             neighbors.append(array(self.vec_label)[l])
-        return labels
+        return neighbors[0]
 
     def get_word_vec(self, word):
         vec = self.t2v.text2v(word, self.cuttor)
         return vec
 
 
+from flask import Flask, request
+app = Flask(__name__)
+
+recmder = WordRecommander()
+# recmder.build_hnsw()
+recmder.load_hnsw()
+
+@app.route("/similar")
+def get():
+    word = request.args.get('word')
+    neighbors = recmder.get_similar_words(word)
+    return ' '.join('%s' % w for w in neighbors)
+
+
 if __name__ == "__main__":
-    recmder = WordRecommander()
-    # 构建HNSW索引
-    # recmder.build_hnsw(vec_data, vec_label_int)
-    recmder.load_hnsw()
-    neighbors = recmder.get_similar_words("区块链")
-    print(neighbors)
-    neighbors = recmder.get_similar_words("数据")
-    print(neighbors)
+    app.run(host='127.0.0.1', port=5000)
