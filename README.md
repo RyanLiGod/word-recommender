@@ -7,3 +7,4 @@
 ``` bash
 python vec.py
 ```
+请求方式：`http://localhost:5000/similar?word=数据挖掘`
