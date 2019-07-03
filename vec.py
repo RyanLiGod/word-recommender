@@ -35,7 +35,7 @@ class WordRecommander(object):
         self.vec_label = []
         self.vec_label_int = []
         print("Preparing data...")
-        with open('Techword.txt', 'r') as f:
+        with open('TechWord.txt', 'r') as f:
             n = 0
             for line in f.readlines():
                 vec = self.get_word_vec(line.strip())
