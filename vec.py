@@ -27,7 +27,7 @@ class Convert2Vec(object):
 class WordRecommander(object):
     def __init__(self):
         print("Loading word2vec bin...")
-        self.wm = gensim.models.KeyedVectors.load_word2vec_format("wm.bin", binary=True)
+        self.wm = gensim.models.word2vec.Word2Vec.load_word2vec_format("wm.bin", binary=True)
         print("Loading word2vec finished.")
         self.t2v = Convert2Vec(self.wm)
         self.cuttor = FilterCut()
@@ -59,9 +59,9 @@ class WordRecommander(object):
         print("Loading index from 'tech_word.ind'\n")
         self.p.load_index("tech_word.ind", max_elements=1100000)
 
-    def get_similar_words(self, word):
+    def get_similar_words(self, word, k):
         vec = self.get_word_vec(word)
-        labels, _ = self.p.knn_query(vec, k=10)
+        labels, _ = self.p.knn_query(vec, k)
         neighbors = []
         for l in labels:
             neighbors.append(array(self.vec_label)[l])
@@ -82,9 +82,10 @@ recmder.load_hnsw()
 @app.route("/similar")
 def get():
     word = request.args.get('word')
-    neighbors = recmder.get_similar_words(word)
+    k = request.args.get('k')
+    neighbors = recmder.get_similar_words(word, int(k))
     return ' '.join('%s' % w for w in neighbors)
 
 
 if __name__ == "__main__":
-    app.run(host='127.0.0.1', port=5000)
+    app.run(host='0.0.0.0', port=5000)
