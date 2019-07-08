@@ -27,7 +27,7 @@ class Convert2Vec(object):
 class WordRecommander(object):
     def __init__(self):
         print("Loading word2vec bin...")
-        self.wm = gensim.models.word2vec.Word2Vec.load_word2vec_format("wm.bin", binary=True)
+        self.wm = gensim.models.KeyedVectors.load_word2vec_format("wm.bin", binary=True)
         print("Loading word2vec finished.")
         self.t2v = Convert2Vec(self.wm)
         self.cuttor = FilterCut()
